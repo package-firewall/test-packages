@@ -1,0 +1,16 @@
+{
+  "name": "@package-firewall/test",
+  "version": "0.0.1",
+  "description": "Harmless test package for Package Firewall. It is on the Package Firewall block list on purpose.",
+  "main": "index.js",
+  "files": ["index.js", "README.md", "LICENSE"],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/package-firewall/test-packages.git",
+    "directory": "npm"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

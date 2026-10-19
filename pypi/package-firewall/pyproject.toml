@@ -1,0 +1,14 @@
+[build-system]
+requires = ["hatchling>=1.26"]
+build-backend = "hatchling.build"
+
+[project]
+name = "package-firewall"
+version = "0.0.1"
+description = "Name reserved for Package Firewall. This release is an empty placeholder."
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.8"
+
+[project.urls]
+Source = "https://github.com/package-firewall/test-packages"
