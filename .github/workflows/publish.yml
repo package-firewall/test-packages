@@ -1,0 +1,88 @@
+# Publishes @package-firewall/test to npm and package-firewall +
+# package-firewall-test to PyPI with trusted publishing (OIDC): no tokens are
+# stored in this repo. Runs on a vX.Y.Z tag, or by hand from the Actions tab.
+# A version that is already published is skipped, so re-running is safe.
+#
+# Trusted publishing needs GitHub-hosted runners (npm does not support
+# self-hosted ones), and npm only adds provenance for public repositories.
+name: Publish
+
+on:
+  push:
+    tags: ["v*.*.*"]
+  workflow_dispatch:
+    inputs:
+      npm:
+        description: Publish to npm
+        type: boolean
+        default: true
+      pypi:
+        description: Publish to PyPI
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish
+  cancel-in-progress: false
+
+jobs:
+  build:
+    uses: ./.github/workflows/build.yml
+
+  npm:
+    name: Publish to npm
+    needs: build
+    if: github.event_name == 'push' || inputs.npm
+    runs-on: ubuntu-latest
+    environment: npm
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v5
+        with:
+          name: dist
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+
+      # Trusted publishing needs npm 11.5.1 or later.
+      - name: Update npm
+        run: npm install -g npm@11.6.2
+
+      - name: Publish
+        shell: bash
+        run: |
+          set -euo pipefail
+          tarball="$(ls npm/*.tgz)"
+          version="$(tar -xzOf "$tarball" package/package.json | node -p 'JSON.parse(require("fs").readFileSync(0)).version')"
+          if npm view "@package-firewall/test@$version" version >/dev/null 2>&1; then
+            echo "@package-firewall/test@$version is already published, skipping" | tee -a "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          npm publish "$tarball" --access public
+          echo "Published @package-firewall/test@$version" >> "$GITHUB_STEP_SUMMARY"
+
+  pypi:
+    name: Publish to PyPI
+    needs: build
+    if: github.event_name == 'push' || inputs.pypi
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v5
+        with:
+          name: dist
+
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: pypi/
+          skip-existing: true
