@@ -68,12 +68,24 @@ jobs:
           npm publish "$tarball" --access public
           echo "Published @package-firewall/test@$version" >> "$GITHUB_STEP_SUMMARY"
 
+  # One job and one environment per PyPI project: PyPI allows only one
+  # pending trusted publisher per repo + workflow + environment.
   pypi:
-    name: Publish to PyPI
+    name: Publish ${{ matrix.project }} to PyPI
     needs: build
     if: github.event_name == 'push' || inputs.pypi
     runs-on: ubuntu-latest
-    environment: pypi
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - project: package-firewall-test
+            dist: package_firewall_test
+            environment: pypi
+          - project: package-firewall
+            dist: package_firewall
+            environment: pypi-reserve
+    environment: ${{ matrix.environment }}
     permissions:
       contents: read
       id-token: write
@@ -82,7 +94,14 @@ jobs:
         with:
           name: dist
 
+      - name: Select ${{ matrix.project }} files
+        run: |
+          mkdir upload
+          # "<dist>-<version>" so package_firewall does not also pick up package_firewall_test.
+          cp pypi/${{ matrix.dist }}-* upload/
+          ls upload
+
       - uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          packages-dir: pypi/
+          packages-dir: upload/
           skip-existing: true
