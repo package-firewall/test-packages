@@ -32,7 +32,7 @@ fails CI if any package disagrees. To release, bump `VERSION`,
 PyPI separately). Versions already on a registry are skipped.
 
 Publishing uses trusted publishing (OIDC), so the repo holds no tokens. It
-needs GitHub-hosted runners, and environments named `npm` and `pypi`.
+needs GitHub-hosted runners, and environments named `npm`, `pypi` and `pypi-reserve`.
 
 ## One-time setup
 
@@ -43,8 +43,10 @@ needs GitHub-hosted runners, and environments named `npm` and `pypi`.
    `npm trust github @package-firewall/test --repo package-firewall/test-packages --file publish.yml --env npm --allow-publish`
    (or Package settings → Trusted publishing on npmjs.com).
 2. **PyPI:** on pypi.org → Your account → Publishing, add a pending publisher
-   for `package-firewall` and for `package-firewall-test`: owner
-   `package-firewall`, repository `test-packages`, workflow `publish.yml`,
-   environment `pypi`. The first workflow run creates both projects.
-3. **GitHub:** the `npm` and `pypi` environments are created on the first
+   for each project: owner `package-firewall`, repository `test-packages`,
+   workflow `publish.yml`, environment `pypi` for `package-firewall-test` and
+   `pypi-reserve` for `package-firewall` (PyPI allows one pending publisher
+   per repo, workflow and environment). The first workflow run creates both
+   projects.
+3. **GitHub:** the `npm`, `pypi` and `pypi-reserve` environments are created on the first
    run; add required reviewers to them if publishing should need an approval.
